@@ -24,7 +24,9 @@ func (tc *Client) createEvent(eventName string, properties map[string]any) Event
 
 	// Add system metadata to properties
 	allProperties["user_uuid"] = tc.userUUID
+	globalTelemetryMu.RLock()
 	allProperties["version"] = tc.version
+	globalTelemetryMu.RUnlock()
 	allProperties["os"] = osInfo
 	allProperties["os_language"] = osLanguage
 
@@ -117,7 +119,7 @@ func (tc *Client) performHTTPRequest(event *EventPayload) error {
 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", fmt.Sprintf("cagent/%s", tc.version))
+	req.Header.Set("User-Agent", fmt.Sprintf("cagent/%s", event.Properties["version"]))
 	if tc.apiKey != "" && tc.header != "" {
 		req.Header.Set(tc.header, tc.apiKey)
 	}

@@ -161,3 +161,5 @@ require (
 	rsc.io/omap v1.2.0 // indirect
 	rsc.io/ordered v1.1.1 // indirect
 )
+
+replace github.com/openai/openai-go/v3 v3.10.0 => github.com/victorftrdba/openai-go-cagent-compat/v3 v3.0.0-20261012014727-c6bd3f0cc984

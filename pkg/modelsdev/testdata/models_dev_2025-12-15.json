@@ -1,0 +1,691 @@
+{
+  "cached_at": "2025-12-15T20:52:34Z",
+  "database": {
+    "providers": {
+      "anthropic": {
+        "doc": "https://docs.anthropic.com/en/docs/about-claude/models",
+        "env": [
+          "ANTHROPIC_API_KEY"
+        ],
+        "id": "anthropic",
+        "models": {
+          "claude-3-7-sonnet-latest": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.3,
+              "cache_write": 3.75,
+              "input": 3.0,
+              "output": 15.0
+            },
+            "id": "claude-3-7-sonnet-latest",
+            "knowledge": "2024-10-31",
+            "last_updated": "2025-02-19",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Sonnet 3.7 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-02-19",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-haiku-4-5": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.1,
+              "cache_write": 1.25,
+              "input": 1.0,
+              "output": 5.0
+            },
+            "id": "claude-haiku-4-5",
+            "knowledge": "2025-02-28",
+            "last_updated": "2025-10-15",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Haiku 4.5 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-10-15",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-opus-4-0": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 1.5,
+              "cache_write": 18.75,
+              "input": 15.0,
+              "output": 75.0
+            },
+            "id": "claude-opus-4-0",
+            "knowledge": "2025-03-31",
+            "last_updated": "2025-05-22",
+            "limit": {
+              "context": 200000,
+              "output": 32000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Opus 4 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-05-22",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-opus-4-5": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.5,
+              "cache_write": 6.25,
+              "input": 5.0,
+              "output": 25.0
+            },
+            "id": "claude-opus-4-5",
+            "knowledge": "2025-03-31",
+            "last_updated": "2025-11-24",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Opus 4.5 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-11-24",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-sonnet-4-0": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.3,
+              "cache_write": 3.75,
+              "input": 3.0,
+              "output": 15.0
+            },
+            "id": "claude-sonnet-4-0",
+            "knowledge": "2025-03-31",
+            "last_updated": "2025-05-22",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Sonnet 4 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-05-22",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-sonnet-4-5": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.3,
+              "cache_write": 3.75,
+              "input": 3.0,
+              "output": 15.0
+            },
+            "id": "claude-sonnet-4-5",
+            "knowledge": "2025-07-31",
+            "last_updated": "2025-09-29",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Sonnet 4.5 (latest)",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-09-29",
+            "temperature": true,
+            "tool_call": true
+          },
+          "claude-sonnet-4-5-20250929": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.3,
+              "cache_write": 3.75,
+              "input": 3.0,
+              "output": 15.0
+            },
+            "id": "claude-sonnet-4-5-20250929",
+            "knowledge": "2025-07-31",
+            "last_updated": "2025-09-29",
+            "limit": {
+              "context": 200000,
+              "output": 64000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Claude Sonnet 4.5",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-09-29",
+            "temperature": true,
+            "tool_call": true
+          }
+        },
+        "name": "Anthropic",
+        "npm": "@ai-sdk/anthropic"
+      },
+      "google": {
+        "doc": "https://ai.google.dev/gemini-api/docs/pricing",
+        "env": [
+          "GOOGLE_GENERATIVE_AI_API_KEY",
+          "GEMINI_API_KEY"
+        ],
+        "id": "google",
+        "models": {
+          "gemini-2.5-flash": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.075,
+              "input": 0.3,
+              "output": 2.5
+            },
+            "id": "gemini-2.5-flash",
+            "knowledge": "2025-01",
+            "last_updated": "2025-06-05",
+            "limit": {
+              "context": 1048576,
+              "output": 65536
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "audio",
+                "video",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Gemini 2.5 Flash",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-03-20",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gemini-2.5-pro": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.31,
+              "input": 1.25,
+              "output": 10.0
+            },
+            "id": "gemini-2.5-pro",
+            "knowledge": "2025-01",
+            "last_updated": "2025-06-05",
+            "limit": {
+              "context": 1048576,
+              "output": 65536
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image",
+                "audio",
+                "video",
+                "pdf"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Gemini 2.5 Pro",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-03-20",
+            "temperature": true,
+            "tool_call": true
+          }
+        },
+        "name": "Google",
+        "npm": "@ai-sdk/google"
+      },
+      "mistral": {
+        "doc": "https://docs.mistral.ai/getting-started/models/",
+        "env": [
+          "MISTRAL_API_KEY"
+        ],
+        "id": "mistral",
+        "models": {
+          "mistral-small-latest": {
+            "attachment": false,
+            "cost": {
+              "input": 0.1,
+              "output": 0.3
+            },
+            "id": "mistral-small-latest",
+            "knowledge": "2025-03",
+            "last_updated": "2024-09-04",
+            "limit": {
+              "context": 128000,
+              "output": 16384
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Mistral Small",
+            "open_weights": true,
+            "reasoning": false,
+            "release_date": "2024-09-01",
+            "temperature": true,
+            "tool_call": true
+          }
+        },
+        "name": "Mistral",
+        "npm": "@ai-sdk/mistral"
+      },
+      "nebius": {
+        "api": "https://api.tokenfactory.nebius.com/v1",
+        "doc": "https://docs.tokenfactory.nebius.com/",
+        "env": [
+          "NEBIUS_API_KEY"
+        ],
+        "id": "nebius",
+        "models": {
+          "moonshotai/kimi-k2-instruct": {
+            "attachment": false,
+            "cost": {
+              "input": 0.5,
+              "output": 2.4
+            },
+            "id": "moonshotai/kimi-k2-instruct",
+            "knowledge": "2024-01",
+            "last_updated": "2025-10-04",
+            "limit": {
+              "context": 131072,
+              "output": 8192
+            },
+            "modalities": {
+              "input": [
+                "text"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Kimi K2 Instruct",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-01-01",
+            "temperature": true,
+            "tool_call": true
+          }
+        },
+        "name": "Nebius Token Factory",
+        "npm": "@ai-sdk/openai-compatible"
+      },
+      "openai": {
+        "doc": "https://platform.openai.com/docs/models",
+        "env": [
+          "OPENAI_API_KEY"
+        ],
+        "id": "openai",
+        "models": {
+          "gpt-4.1": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.5,
+              "input": 2.0,
+              "output": 8.0
+            },
+            "id": "gpt-4.1",
+            "knowledge": "2024-04",
+            "last_updated": "2025-04-14",
+            "limit": {
+              "context": 1047576,
+              "output": 32768
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-4.1",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2025-04-14",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gpt-4.1-nano": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.03,
+              "input": 0.1,
+              "output": 0.4
+            },
+            "id": "gpt-4.1-nano",
+            "knowledge": "2024-04",
+            "last_updated": "2025-04-14",
+            "limit": {
+              "context": 1047576,
+              "output": 32768
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-4.1 nano",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2025-04-14",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gpt-4o": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 1.25,
+              "input": 2.5,
+              "output": 10.0
+            },
+            "id": "gpt-4o",
+            "knowledge": "2023-09",
+            "last_updated": "2024-08-06",
+            "limit": {
+              "context": 128000,
+              "output": 16384
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-4o",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2024-05-13",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gpt-4o-2024-08-06": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 1.25,
+              "input": 2.5,
+              "output": 10.0
+            },
+            "id": "gpt-4o-2024-08-06",
+            "knowledge": "2023-09",
+            "last_updated": "2024-08-06",
+            "limit": {
+              "context": 128000,
+              "output": 16384
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-4o (2024-08-06)",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2024-08-06",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gpt-4o-mini": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.08,
+              "input": 0.15,
+              "output": 0.6
+            },
+            "id": "gpt-4o-mini",
+            "knowledge": "2023-09",
+            "last_updated": "2024-07-18",
+            "limit": {
+              "context": 128000,
+              "output": 16384
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-4o mini",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2024-07-18",
+            "temperature": true,
+            "tool_call": true
+          },
+          "gpt-5": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.13,
+              "input": 1.25,
+              "output": 10.0
+            },
+            "id": "gpt-5",
+            "knowledge": "2024-09-30",
+            "last_updated": "2025-08-07",
+            "limit": {
+              "context": 400000,
+              "output": 128000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-5",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-08-07",
+            "temperature": false,
+            "tool_call": true
+          },
+          "gpt-5-mini": {
+            "attachment": true,
+            "cost": {
+              "cache_read": 0.03,
+              "input": 0.25,
+              "output": 2.0
+            },
+            "id": "gpt-5-mini",
+            "knowledge": "2024-05-30",
+            "last_updated": "2025-08-07",
+            "limit": {
+              "context": 400000,
+              "output": 128000
+            },
+            "modalities": {
+              "input": [
+                "text",
+                "image"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "GPT-5 Mini",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-08-07",
+            "temperature": false,
+            "tool_call": true
+          },
+          "text-embedding-3-small": {
+            "attachment": false,
+            "cost": {
+              "input": 0.02,
+              "output": 0.0
+            },
+            "id": "text-embedding-3-small",
+            "knowledge": "2024-01",
+            "last_updated": "2024-01-25",
+            "limit": {
+              "context": 8191,
+              "output": 1536
+            },
+            "modalities": {
+              "input": [
+                "text"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "text-embedding-3-small",
+            "open_weights": false,
+            "reasoning": false,
+            "release_date": "2024-01-25",
+            "temperature": false,
+            "tool_call": false
+          }
+        },
+        "name": "OpenAI",
+        "npm": "@ai-sdk/openai"
+      },
+      "xai": {
+        "doc": "https://docs.x.ai/docs/models",
+        "env": [
+          "XAI_API_KEY"
+        ],
+        "id": "xai",
+        "models": {
+          "grok-3-mini": {
+            "attachment": false,
+            "cost": {
+              "cache_read": 0.075,
+              "input": 0.3,
+              "output": 0.5
+            },
+            "id": "grok-3-mini",
+            "knowledge": "2024-11",
+            "last_updated": "2025-02-17",
+            "limit": {
+              "context": 131072,
+              "output": 8192
+            },
+            "modalities": {
+              "input": [
+                "text"
+              ],
+              "output": [
+                "text"
+              ]
+            },
+            "name": "Grok 3 Mini",
+            "open_weights": false,
+            "reasoning": true,
+            "release_date": "2025-02-17",
+            "temperature": true,
+            "tool_call": true
+          }
+        },
+        "name": "xAI",
+        "npm": "@ai-sdk/xai"
+      }
+    },
+    "updated_at": "2025-12-15T20:52:34Z"
+  },
+  "last_refresh": "2025-12-15T20:52:34Z"
+}

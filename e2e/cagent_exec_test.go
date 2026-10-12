@@ -2,14 +2,17 @@ package e2e_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/docker/cagent/cmd/root"
+	"github.com/docker/cagent/pkg/modelsdev"
 )
 
 func TestExec_OpenAI(t *testing.T) {
@@ -93,18 +96,32 @@ func TestExec_ToolCallsNeedAcceptance(t *testing.T) {
 func cagentExec(t *testing.T, moreArgs ...string) string {
 	t.Helper()
 
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	cacheDir := filepath.Join(home, ".cagent")
+	require.NoError(t, os.MkdirAll(cacheDir, 0o700))
+	fixture, err := os.ReadFile(filepath.Join("..", "pkg", "modelsdev", "testdata", "models_dev_2025-12-15.json"))
+	require.NoError(t, err)
+	var cached modelsdev.CachedData
+	require.NoError(t, json.Unmarshal(fixture, &cached))
+	cached.CachedAt = time.Now()
+	cached.LastRefresh = cached.CachedAt
+	data, err := json.Marshal(cached)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, modelsdev.CacheFileName), data, 0o600))
+
 	// `cagent exec ...`
 	args := []string{"exec"}
 
 	// Use a dummy .env file to avoid using real JWT. Our proxy server doesn't need it.
 	dotEnv := filepath.Join(t.TempDir(), ".env")
-	err := os.WriteFile(dotEnv, []byte("DOCKER_TOKEN=DUMMY"), 0o644)
+	err = os.WriteFile(dotEnv, []byte("DOCKER_TOKEN=DUMMY"), 0o644)
 	require.NoError(t, err)
 	args = append(args, "--env-from-file", dotEnv)
 
 	// Start a recording AI proxy to record and replay traffic.
 	svr, _ := startRecordingAIProxy(t)
-	args = append(args, "--models-gateway", svr.URL, "--session-db", "/tmp/session.db")
+	args = append(args, "--models-gateway", svr.URL, "--session-db", filepath.Join(t.TempDir(), "session.db"))
 
 	// Run cagent exec
 	var stdout bytes.Buffer

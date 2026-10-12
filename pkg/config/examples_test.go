@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +37,17 @@ func collectExamples(t *testing.T) []string {
 }
 
 func TestParseExamples(t *testing.T) {
-	modelsStore, err := modelsdev.NewStore()
+	cacheDir := t.TempDir()
+	fixture, err := os.ReadFile(filepath.Join("..", "modelsdev", "testdata", "models_dev_2025-12-15.json"))
+	require.NoError(t, err)
+	var cached modelsdev.CachedData
+	require.NoError(t, json.Unmarshal(fixture, &cached))
+	cached.CachedAt = time.Now()
+	cached.LastRefresh = cached.CachedAt
+	data, err := json.Marshal(cached)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, modelsdev.CacheFileName), data, 0o600))
+	modelsStore, err := modelsdev.NewStore(modelsdev.WithCacheDir(cacheDir))
 	require.NoError(t, err)
 
 	for _, file := range collectExamples(t) {

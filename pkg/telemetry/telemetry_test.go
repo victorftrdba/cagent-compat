@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,6 +18,132 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func resetGlobalTelemetry(t *testing.T, client *Client) {
+	t.Helper()
+	globalTelemetryMu.Lock()
+	originalClient, originalVersion, originalDebug := globalToolTelemetryClient, globalTelemetryVersion, globalTelemetryDebugMode
+	globalToolTelemetryClient, globalTelemetryVersion, globalTelemetryDebugMode = client, "unknown", false
+	globalTelemetryOnce = sync.Once{}
+	if client != nil {
+		globalTelemetryOnce.Do(func() {})
+	}
+	globalTelemetryMu.Unlock()
+	t.Cleanup(func() {
+		globalTelemetryMu.Lock()
+		defer globalTelemetryMu.Unlock()
+		globalToolTelemetryClient, globalTelemetryVersion, globalTelemetryDebugMode = originalClient, originalVersion, originalDebug
+		globalTelemetryOnce = sync.Once{}
+		if originalClient != nil {
+			globalTelemetryOnce.Do(func() {})
+		}
+	})
+}
+
+type telemetryRoundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f telemetryRoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestTelemetryReentrantVersionSetter(t *testing.T) {
+	var capturedVersion any
+	var capturedHeader string
+	transport := telemetryRoundTripFunc(func(r *http.Request) (*http.Response, error) {
+		SetGlobalTelemetryVersion("after")
+		var payload map[string][]EventPayload
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			return nil, err
+		}
+		capturedVersion = payload["records"][0].Properties["version"]
+		capturedHeader = r.Header.Get("User-Agent")
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("")), Header: make(http.Header)}, nil
+	})
+	client := newClient(slog.New(slog.NewTextHandler(io.Discard, nil)), true, false, "before", &http.Client{Transport: transport})
+	client.endpoint, client.apiKey = "http://test.invalid", "test-key"
+	resetGlobalTelemetry(t, client)
+	event := client.createEvent("command", map[string]any{"action": "test"})
+	client.sendEvent(&event)
+	require.Equal(t, "before", capturedVersion)
+	require.Equal(t, "cagent/before", capturedHeader)
+	require.Equal(t, "after", client.createEvent("command", nil).Properties["version"])
+}
+
+func TestTelemetryEventVersionSnapshot(t *testing.T) {
+	type receivedEvent struct {
+		header  string
+		payload map[string][]EventPayload
+	}
+	received := make(chan receivedEvent, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload map[string][]EventPayload
+		_ = json.NewDecoder(r.Body).Decode(&payload)
+		received <- receivedEvent{r.Header.Get("User-Agent"), payload}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	client := newClient(slog.New(slog.NewTextHandler(io.Discard, nil)), true, false, "before", server.Client())
+	client.endpoint, client.apiKey = server.URL, "test-key"
+	resetGlobalTelemetry(t, client)
+	event := client.createEvent("command", map[string]any{"action": "test"})
+	SetGlobalTelemetryVersion("after")
+	require.NoError(t, client.performHTTPRequest(&event))
+	captured := <-received
+	require.Len(t, captured.payload["records"], 1)
+	assert.Equal(t, "before", captured.payload["records"][0].Properties["version"])
+	assert.Equal(t, "cagent/before", captured.header)
+}
+
+func TestGlobalTelemetryConcurrentVersionTracking(t *testing.T) {
+	t.Setenv("TELEMETRY_ENABLED", "true")
+	resetGlobalTelemetry(t, nil)
+	var workers sync.WaitGroup
+	clients := make(chan *Client, 32)
+	for i := range 32 {
+		workers.Go(func() {
+			SetGlobalTelemetryVersion(fmt.Sprintf("version-%d", i))
+			SetGlobalTelemetryDebugMode(i%2 == 0)
+			EnsureGlobalTelemetryInitialized()
+			clients <- GetGlobalTelemetryClient()
+		})
+	}
+	workers.Wait()
+	close(clients)
+	client := GetGlobalTelemetryClient()
+	for initialized := range clients {
+		assert.Same(t, client, initialized)
+	}
+	type receivedEvent struct {
+		header  string
+		version any
+	}
+	received := make(chan receivedEvent, 32)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload map[string][]EventPayload
+		if err := json.NewDecoder(r.Body).Decode(&payload); err == nil && len(payload["records"]) == 1 {
+			received <- receivedEvent{r.Header.Get("User-Agent"), payload["records"][0].Properties["version"]}
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	client.mu.Lock()
+	client.endpoint, client.apiKey, client.httpClient = server.URL, "test-key", server.Client()
+	client.mu.Unlock()
+	for i := range 32 {
+		workers.Go(func() {
+			SetGlobalTelemetryVersion(fmt.Sprintf("tracked-%d", i))
+			SetGlobalTelemetryDebugMode(i%2 == 0)
+			TrackCommand("test-command", []string{"test"})
+		})
+	}
+	workers.Wait()
+	for range 32 {
+		select {
+		case event := <-received:
+			assert.Equal(t, fmt.Sprintf("cagent/%s", event.version), event.header)
+		case <-t.Context().Done():
+			t.Fatal("telemetry event did not settle")
+		}
+	}
+}
 
 // MockHTTPClient captures HTTP requests for testing
 type MockHTTPClient struct {
@@ -535,30 +664,18 @@ func TestTrackServerStart(t *testing.T) {
 
 // TestGlobalTelemetryFunctions tests the global telemetry convenience functions
 func TestGlobalTelemetryFunctions(t *testing.T) {
-	// Save original global state
-	originalClient := globalToolTelemetryClient
-	originalVersion := globalTelemetryVersion
-	originalDebugMode := globalTelemetryDebugMode
-	defer func() {
-		globalToolTelemetryClient = originalClient
-		globalTelemetryOnce = sync.Once{} // Reset to new instance
-		globalTelemetryVersion = originalVersion
-		globalTelemetryDebugMode = originalDebugMode
-	}()
-
-	// Reset global state for testing
-	globalToolTelemetryClient = nil
-	globalTelemetryOnce = sync.Once{}
+	resetGlobalTelemetry(t, nil)
 	SetGlobalTelemetryVersion("test-version")
 	SetGlobalTelemetryDebugMode(true)
 
+	client := GetGlobalTelemetryClient()
+	client.httpClient = NewMockHTTPClient()
 	TrackCommand("test-command", []string{"arg1"})
 
-	assert.NotNil(t, globalToolTelemetryClient)
+	assert.NotNil(t, client)
 
 	EnsureGlobalTelemetryInitialized()
-	client := GetGlobalTelemetryClient()
-	assert.NotNil(t, client)
+	assert.Same(t, client, GetGlobalTelemetryClient())
 }
 
 // TestHTTPRequestVerification tests that HTTP requests are made correctly when telemetry is enabled

@@ -495,20 +495,28 @@ func (r *LocalRuntime) registerDefaultTools() {
 	slog.Debug("Registered default tools", "count", len(r.toolMap))
 }
 
-func (r *LocalRuntime) finalizeEventChannel(ctx context.Context, sess *session.Session, events chan Event) {
+func (r *LocalRuntime) finalizeEventChannel(ctx context.Context, sess *session.Session, events chan Event, titleResult <-chan string) {
 	defer close(events)
 
-	events <- StreamStopped(sess.ID, r.currentAgent)
-
+	if titleResult != nil {
+		if title := <-titleResult; title != "" {
+			sess.Title = title
+			if err := r.sessionStore.UpdateSession(ctx, sess); err != nil {
+				slog.Error("Failed to persist session title", "session_id", sess.ID, "error", err)
+			}
+			events <- SessionTitle(sess.ID, title)
+		}
+	}
 	telemetry.RecordSessionEnd(ctx)
-
-	r.titleGen.Wait()
+	events <- StreamStopped(sess.ID, r.currentAgent)
 }
 
 // RunStream starts the agent's interaction loop and returns a channel of events
 func (r *LocalRuntime) RunStream(ctx context.Context, sess *session.Session) <-chan Event {
 	slog.Debug("Starting runtime stream", "agent", r.currentAgent, "session_id", sess.ID)
 	events := make(chan Event, 128)
+	titleSessionID := sess.ID
+	titleUserMessage := sess.GetLastUserMessageContent()
 
 	go func() {
 		telemetry.RecordSessionStart(ctx, r.currentAgent, sess.ID)
@@ -565,12 +573,13 @@ func (r *LocalRuntime) RunStream(ctx context.Context, sess *session.Session) <-c
 
 		events <- StreamStarted(sess.ID, a.Name())
 
-		defer r.finalizeEventChannel(ctx, sess, events)
+		var titleResult <-chan string
+		defer func() { r.finalizeEventChannel(ctx, sess, events, titleResult) }()
 
 		r.registerDefaultTools()
 
 		if sess.Title == "" {
-			r.titleGen.Generate(ctx, sess, events)
+			titleResult = r.titleGen.Generate(ctx, titleSessionID, titleUserMessage)
 		}
 
 		iteration := 0

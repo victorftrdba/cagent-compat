@@ -9,6 +9,7 @@ env:
 
 jobs:
   publish:
+    if: github.repository == 'docker/cagent'
     runs-on: windows-latest
     steps:
       - name: publish

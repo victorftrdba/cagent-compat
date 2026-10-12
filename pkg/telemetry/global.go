@@ -9,21 +9,20 @@ import (
 // TrackCommand records a command event using automatic telemetry initialization
 func TrackCommand(action string, args []string) {
 	// Automatically initialize telemetry if not already done
-	EnsureGlobalTelemetryInitialized()
-
-	if globalToolTelemetryClient != nil {
+	if client := GetGlobalTelemetryClient(); client != nil {
 		ctx := context.Background()
 		commandEvent := CommandEvent{
 			Action:  action,
 			Args:    args,
 			Success: true, // We're tracking user intent, not outcome
 		}
-		globalToolTelemetryClient.Track(ctx, &commandEvent)
+		client.Track(ctx, &commandEvent)
 	}
 }
 
 // Global variables for simple tool telemetry
 var (
+	globalTelemetryMu         sync.RWMutex
 	globalToolTelemetryClient *Client
 	globalTelemetryOnce       sync.Once
 	globalTelemetryVersion    = "unknown"
@@ -33,12 +32,16 @@ var (
 // GetGlobalTelemetryClient returns the global telemetry client for adding to context
 func GetGlobalTelemetryClient() *Client {
 	EnsureGlobalTelemetryInitialized()
+	globalTelemetryMu.RLock()
+	defer globalTelemetryMu.RUnlock()
 	return globalToolTelemetryClient
 }
 
 // SetGlobalTelemetryVersion sets the version for automatic telemetry initialization
 // This should be called by the root package to provide the correct version
 func SetGlobalTelemetryVersion(version string) {
+	globalTelemetryMu.Lock()
+	defer globalTelemetryMu.Unlock()
 	// If telemetry is already initialized, update the version
 	if globalToolTelemetryClient != nil {
 		globalToolTelemetryClient.version = version
@@ -50,12 +53,16 @@ func SetGlobalTelemetryVersion(version string) {
 // SetGlobalTelemetryDebugMode sets the debug mode for automatic telemetry initialization
 // This should be called by the root package to pass the --debug flag state
 func SetGlobalTelemetryDebugMode(debug bool) {
+	globalTelemetryMu.Lock()
+	defer globalTelemetryMu.Unlock()
 	globalTelemetryDebugMode = debug
 }
 
 // EnsureGlobalTelemetryInitialized ensures telemetry is initialized exactly once
 // This handles all the setup automatically - no explicit initialization needed
 func EnsureGlobalTelemetryInitialized() {
+	globalTelemetryMu.Lock()
+	defer globalTelemetryMu.Unlock()
 	globalTelemetryOnce.Do(func() {
 		// Use the debug mode set by the root package via --debug flag
 		debugMode := globalTelemetryDebugMode
