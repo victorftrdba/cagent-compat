@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sync"
 
 	"github.com/docker/cagent/pkg/agent"
 	"github.com/docker/cagent/pkg/model/provider"
@@ -19,7 +18,6 @@ const (
 )
 
 type titleGenerator struct {
-	wg    sync.WaitGroup
 	model provider.Provider
 }
 
@@ -29,22 +27,19 @@ func newTitleGenerator(model provider.Provider) *titleGenerator {
 	}
 }
 
-func (t *titleGenerator) Generate(ctx context.Context, sess *session.Session, events chan<- Event) {
-	t.wg.Go(func() {
-		t.generate(ctx, sess, events)
-	})
+func (t *titleGenerator) Generate(ctx context.Context, sessionID, firstUserMessage string) <-chan string {
+	result := make(chan string, 1)
+	go func() {
+		defer close(result)
+		result <- t.generate(ctx, sessionID, firstUserMessage)
+	}()
+	return result
 }
 
-func (t *titleGenerator) Wait() {
-	t.wg.Wait()
-}
-
-func (t *titleGenerator) generate(ctx context.Context, sess *session.Session, events chan<- Event) {
-	slog.Debug("Generating title for session", "session_id", sess.ID)
-
-	firstUserMessage := sess.GetLastUserMessageContent()
+func (t *titleGenerator) generate(ctx context.Context, sessionID, firstUserMessage string) string {
+	slog.Debug("Generating title for session", "session_id", sessionID)
 	if firstUserMessage == "" {
-		return
+		return ""
 	}
 
 	userPrompt := fmt.Sprintf(titleUserPromptFormat, firstUserMessage)
@@ -69,21 +64,20 @@ func (t *titleGenerator) generate(ctx context.Context, sess *session.Session, ev
 	titleRuntime, err := New(newTeam, WithSessionCompaction(false))
 	if err != nil {
 		slog.Error("Failed to create title generator runtime", "error", err)
-		return
+		return ""
 	}
 
 	_, err = titleRuntime.Run(ctx, titleSession)
 	if err != nil {
-		slog.Error("Failed to generate session title", "session_id", sess.ID, "error", err)
-		return
+		slog.Error("Failed to generate session title", "session_id", sessionID, "error", err)
+		return ""
 	}
 
 	title := titleSession.GetLastAssistantMessageContent()
 	if title == "" {
-		return
+		return ""
 	}
 
-	sess.Title = title
-	slog.Debug("Generated session title", "session_id", sess.ID, "title", title)
-	events <- SessionTitle(sess.ID, title)
+	slog.Debug("Generated session title", "session_id", sessionID, "title", title)
+	return title
 }

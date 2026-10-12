@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -559,18 +560,29 @@ func TestToolCallVariations(t *testing.T) {
 
 // queueProvider returns a different stream on each CreateChatCompletionStream call.
 type queueProvider struct {
-	id      string
-	streams []chat.MessageStream
+	id           string
+	mu           sync.Mutex
+	streams      []chat.MessageStream
+	titleStreams []chat.MessageStream
 }
 
 func (p *queueProvider) ID() string { return p.id }
 
-func (p *queueProvider) CreateChatCompletionStream(context.Context, []chat.Message, []tools.Tool) (chat.MessageStream, error) {
-	if len(p.streams) == 0 {
+func (p *queueProvider) CreateChatCompletionStream(_ context.Context, messages []chat.Message, _ []tools.Tool) (chat.MessageStream, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	streams := &p.streams
+	for _, message := range messages {
+		if message.Role == chat.MessageRoleSystem && message.Content == titleSystemPrompt {
+			streams = &p.titleStreams
+			break
+		}
+	}
+	if len(*streams) == 0 {
 		return &mockStream{}, nil
 	}
-	s := p.streams[0]
-	p.streams = p.streams[1:]
+	s := (*streams)[0]
+	*streams = (*streams)[1:]
 	return s, nil
 }
 
@@ -597,7 +609,11 @@ func TestCompaction(t *testing.T) {
 		AddStopWithUsage(1, 1).
 		Build()
 
-	prov := &queueProvider{id: "test/mock-model", streams: []chat.MessageStream{mainStream, summaryStream}}
+	prov := &queueProvider{
+		id:           "test/mock-model",
+		streams:      []chat.MessageStream{mainStream, summaryStream},
+		titleStreams: []chat.MessageStream{newStreamBuilder().AddContent("Compaction test").AddStopWithUsage(1, 1).Build()},
+	}
 
 	root := agent.New("root", "You are a test agent", agent.WithModel(prov))
 	tm := team.New(team.WithAgents(root))
@@ -628,6 +644,10 @@ func TestCompaction(t *testing.T) {
 	}
 
 	require.NotEqual(t, -1, compactionStartIdx, "expected a SessionCompaction start event")
+	prov.mu.Lock()
+	defer prov.mu.Unlock()
+	require.Empty(t, prov.streams)
+	require.Empty(t, prov.titleStreams)
 }
 
 func TestSessionWithoutUserMessage(t *testing.T) {

@@ -96,6 +96,7 @@ jobs:
         run: task build
 
   build-image:
+    if: github.repository == 'docker/cagent'
     needs: [lint, test, license-check]
     runs-on: ubuntu-latest
     steps:
